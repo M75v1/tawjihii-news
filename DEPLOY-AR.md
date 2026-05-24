@@ -63,13 +63,11 @@ https://tawjihii-news.onrender.com/api/news
 
 ---
 
-## الخيار 3: Koyeb (مجاني — بديل)
+## الخيار 3: Koyeb (مجاني — موصى به)
 
-1. [koyeb.com](https://www.koyeb.com) → تسجيل
-2. **Create App** → GitHub → اختر `tawjihii-news`
-3. **Builder:** Node.js | **Run:** `npm start`
-4. أضف نفس متغيرات البيئة أعلاه
-5. **Deploy**
+راجع الدليل الكامل: **[DEPLOY-KOYEB.md](./DEPLOY-KOYEB.md)**
+
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/M75v1/tawjihii-news&branch=main&name=tawjihii-news&ports=3000;http;/&env[NODE_ENV]=production&env[ADMIN_USER]=M75.zz)
 
 ---
 

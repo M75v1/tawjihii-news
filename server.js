@@ -276,8 +276,18 @@ app.delete("/api/news/:id", requireAdmin, (req, res) => {
   }
 });
 
+function getPublicUrl(port) {
+  if (process.env.KOYEB_PUBLIC_DOMAIN) {
+    return `https://${process.env.KOYEB_PUBLIC_DOMAIN}`;
+  }
+  if (process.env.RENDER_EXTERNAL_URL) {
+    return process.env.RENDER_EXTERNAL_URL;
+  }
+  return `http://localhost:${port}`;
+}
+
 function logStarted(port) {
-  const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  const host = getPublicUrl(port);
   console.log(`\n  TAWJIHII News Server`);
   console.log(`  الموقع:  ${host}`);
   console.log(`  Admin:   ${host}/admin.html`);
