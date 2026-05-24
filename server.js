@@ -24,7 +24,25 @@ loadEnv();
 const app = express();
 const BASE_PORT = Number(process.env.PORT) || 3000;
 const MAX_TRIES = 20;
-const NEWS_FILE = path.join(__dirname, "news.json");
+function resolveNewsFile() {
+  const bundled = path.join(__dirname, "news.json");
+  if (process.env.NODE_ENV !== "production") return bundled;
+
+  const dataDir = process.env.DATA_DIR || path.join("/tmp", "tawjihii");
+  try {
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    const cloudFile = path.join(dataDir, "news.json");
+    if (!fs.existsSync(cloudFile) && fs.existsSync(bundled)) {
+      fs.copyFileSync(bundled, cloudFile);
+    }
+    if (fs.existsSync(cloudFile)) return cloudFile;
+  } catch {
+    /* استخدم الملف المدمج */
+  }
+  return bundled;
+}
+
+const NEWS_FILE = resolveNewsFile();
 
 const ADMIN_USER = process.env.ADMIN_USER || "M75.zz";
 const ADMIN_PASS = process.env.ADMIN_PASS || "";
@@ -258,19 +276,28 @@ app.delete("/api/news/:id", requireAdmin, (req, res) => {
   }
 });
 
+function logStarted(port) {
+  const host = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  console.log(`\n  TAWJIHII News Server`);
+  console.log(`  الموقع:  ${host}`);
+  console.log(`  Admin:   ${host}/admin.html`);
+  console.log(`  API:     ${host}/api/news\n`);
+}
+
+function startProduction() {
+  const port = Number(process.env.PORT) || 3000;
+  app.listen(port, "0.0.0.0", () => logStarted(port));
+}
+
 function startServer(port, attempt = 0) {
-  const server = app.listen(port);
+  const server = app.listen(port, "0.0.0.0");
 
   server.on("listening", () => {
     const activePort = server.address().port;
-    console.log(`\n  TAWJIHII News Server`);
-    console.log(`  الموقع:  http://localhost:${activePort}`);
-    console.log(`  Admin:   http://localhost:${activePort}/admin.html`);
-    console.log(`  API:     http://localhost:${activePort}/api/news`);
+    logStarted(activePort);
     if (activePort !== BASE_PORT) {
       console.log(`  ملاحظة: المنفذ ${BASE_PORT} كان مشغولاً — تم استخدام ${activePort}`);
     }
-    console.log("");
   });
 
   server.on("error", (err) => {
@@ -293,4 +320,8 @@ function startServer(port, attempt = 0) {
   });
 }
 
-startServer(BASE_PORT);
+if (process.env.NODE_ENV === "production") {
+  startProduction();
+} else {
+  startServer(BASE_PORT);
+}

@@ -58,25 +58,21 @@ GET /api/news
 
 `registrationLink` اختياري — يظهر فقط عند تفعيل زر التسجيل.
 
-## النشر على Render
+## استضافة مجانية (Render)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/M75v1/tawjihii-news)
 
-1. اضغط الزر أعلاه أو اربط المستودع من [Render Dashboard](https://dashboard.render.com).
-2. عند الإنشاء، أدخل **ADMIN_PASS** (كلمة مرور لوحة الإدارة).
-3. بعد النشر: `https://tawjihii-news.onrender.com` (أو الاسم الذي تختاره).
+**دليل مفصل بالعربية:** [DEPLOY-AR.md](./DEPLOY-AR.md)
 
-**متغيرات البيئة على Render:**
+1. اضغط الزر أعلاه (حساب Render مجاني).
+2. أدخل **ADMIN_PASS** عند الإنشاء.
+3. بعد 5–10 دقائق: `https://tawjihii-news.onrender.com`
 
 | المتغير | مطلوب |
 |---------|--------|
-| `ADMIN_USER` | نعم (افتراضي: M75.zz) |
+| `ADMIN_USER` | نعم |
 | `ADMIN_PASS` | نعم |
-| `SESSION_SECRET` | يُولَّد تلقائياً من Blueprint |
-
-> على الخطة المجانية، ملف `news.json` قد يُعاد عند إعادة التشغيل. للإنتاج الدائم استخدم قاعدة بيانات لاحقاً.
-
-GitHub Pages لا يدعم خادم Node مباشرة.
+| `SESSION_SECRET` | يُولَّد تلقائياً |
 
 ## الترخيص
 
