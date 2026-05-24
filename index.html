@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="أخبار TAWJIHII - منصة التوجيه والأخبار الرسمية" />
+  <title>TAWJIHII | أخبار</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-pattern" aria-hidden="true"></div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">T</span>
+        <span class="logo-text">TAWJIHII</span>
+      </a>
+      <nav class="nav">
+        <a href="#news" class="nav-link active">الأخبار</a>
+      </nav>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي">
+        <span class="theme-icon sun">☀️</span>
+        <span class="theme-icon moon">🌙</span>
+      </button>
+      <button type="button" class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-content">
+        <p class="hero-badge animate-fade-up">تطبيق Android الرسمي</p>
+        <h1 class="hero-title animate-fade-up delay-1">أخبار <span>TAWJIHII</span></h1>
+        <p class="hero-subtitle animate-fade-up delay-2">
+          آخر المستجدات والإعلانات والتوجيه الدراسي في مكان واحد
+        </p>
+        <div class="hero-stats animate-fade-up delay-3">
+          <div class="stat">
+            <strong id="newsCount">0</strong>
+            <span>خبر</span>
+          </div>
+          <div class="stat">
+            <strong>API</strong>
+            <span>/api/news</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="news" class="news-section">
+      <div class="container">
+        <div class="section-head">
+          <h2>آخر الأخبار</h2>
+          <p>تحديثات مباشرة من فريق TAWJIHII</p>
+        </div>
+        <div id="newsGrid" class="news-grid">
+          <div class="loader">
+            <div class="loader-ring"></div>
+            <p>جاري تحميل الأخبار...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> TAWJIHII. جميع الحقوق محفوظة.</p>
+      <a href="/api/news" target="_blank" rel="noopener">JSON API</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

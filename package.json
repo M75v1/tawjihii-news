@@ -1,0 +1,16 @@
+{
+  "name": "tawjihii-news",
+  "version": "1.0.0",
+  "description": "موقع أخبار TAWJIHII مع API لتطبيق Android",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "stop": "node stop-ports.js"
+  },
+  "keywords": ["tawjihii", "news", "express"],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
