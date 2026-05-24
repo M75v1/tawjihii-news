@@ -29,6 +29,10 @@ const NEWS_FILE = path.join(__dirname, "news.json");
 const ADMIN_USER = process.env.ADMIN_USER || "M75.zz";
 const ADMIN_PASS = process.env.ADMIN_PASS || "";
 const SESSION_SECRET = process.env.SESSION_SECRET || "tawjihii-dev-secret";
+
+if (process.env.NODE_ENV === "production" && !ADMIN_PASS) {
+  console.warn("تحذير: عيّن ADMIN_PASS في متغيرات البيئة على Render");
+}
 const SESSION_MS = 24 * 60 * 60 * 1000;
 
 const sessions = new Map();

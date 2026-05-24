@@ -10,6 +10,9 @@
   },
   "keywords": ["tawjihii", "news", "express"],
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "express": "^4.21.2"
   }
