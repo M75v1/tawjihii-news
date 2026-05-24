@@ -1,7 +1,13 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
+const { readNews, writeNews } = require("./storage");
+const {
+  SESSION_MS,
+  signToken,
+  verifyToken,
+  getBearerToken,
+} = require("./auth");
 
 function loadEnv() {
   const envPath = path.join(__dirname, ".env");
@@ -24,48 +30,17 @@ loadEnv();
 const app = express();
 const BASE_PORT = Number(process.env.PORT) || 3000;
 const MAX_TRIES = 20;
-function resolveNewsFile() {
-  const bundled = path.join(__dirname, "news.json");
-  if (process.env.NODE_ENV !== "production") return bundled;
-
-  const dataDir = process.env.DATA_DIR || path.join("/tmp", "tawjihii");
-  try {
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    const cloudFile = path.join(dataDir, "news.json");
-    if (!fs.existsSync(cloudFile) && fs.existsSync(bundled)) {
-      fs.copyFileSync(bundled, cloudFile);
-    }
-    if (fs.existsSync(cloudFile)) return cloudFile;
-  } catch {
-    /* استخدم الملف المدمج */
-  }
-  return bundled;
-}
-
-const NEWS_FILE = resolveNewsFile();
 
 const ADMIN_USER = process.env.ADMIN_USER || "M75.zz";
 const ADMIN_PASS = process.env.ADMIN_PASS || "";
 const SESSION_SECRET = process.env.SESSION_SECRET || "tawjihii-dev-secret";
 
-if (process.env.NODE_ENV === "production" && !ADMIN_PASS) {
-  console.warn("تحذير: عيّن ADMIN_PASS في متغيرات البيئة على Render");
+if (process.env.NODE_ENV === "production" && !ADMIN_PASS && !process.env.VERCEL) {
+  console.warn("تحذير: عيّن ADMIN_PASS في متغيرات البيئة");
 }
-const SESSION_MS = 24 * 60 * 60 * 1000;
-
-const sessions = new Map();
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(__dirname));
-
-function readNews() {
-  const raw = fs.readFileSync(NEWS_FILE, "utf8");
-  return JSON.parse(raw);
-}
-
-function writeNews(data) {
-  fs.writeFileSync(NEWS_FILE, JSON.stringify(data, null, 2), "utf8");
-}
 
 function buildNewsFields(body, fallbackDate) {
   const { title, description, image, date, registrationLink } = body;
@@ -82,33 +57,13 @@ function buildNewsFields(body, fallbackDate) {
       ? String(registrationLink).trim()
       : "";
 
-  if (link) {
-    item.registrationLink = link;
-  }
+  if (link) item.registrationLink = link;
 
   return item;
 }
 
-function createToken() {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-function getBearerToken(req) {
-  const header = req.headers.authorization;
-  if (header && header.startsWith("Bearer ")) {
-    return header.slice(7);
-  }
-  return null;
-}
-
 function isValidSession(token) {
-  if (!token || !sessions.has(token)) return false;
-  const expiry = sessions.get(token);
-  if (Date.now() > expiry) {
-    sessions.delete(token);
-    return false;
-  }
-  return true;
+  return Boolean(verifyToken(token, SESSION_SECRET));
 }
 
 function requireAdmin(req, res, next) {
@@ -132,8 +87,7 @@ app.post("/api/admin/login", (req, res) => {
     });
   }
 
-  const token = createToken();
-  sessions.set(token, Date.now() + SESSION_MS);
+  const token = signToken(ADMIN_USER, SESSION_SECRET);
 
   res.json({
     success: true,
@@ -143,22 +97,21 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 app.post("/api/admin/logout", requireAdmin, (req, res) => {
-  const token = getBearerToken(req);
-  sessions.delete(token);
   res.json({ success: true, message: "تم تسجيل الخروج" });
 });
 
 app.get("/api/admin/me", (req, res) => {
   const token = getBearerToken(req);
-  if (!isValidSession(token)) {
+  const session = verifyToken(token, SESSION_SECRET);
+  if (!session) {
     return res.status(401).json({ success: false, authenticated: false });
   }
   res.json({ success: true, authenticated: true, user: ADMIN_USER });
 });
 
-app.get("/api/news", (req, res) => {
+app.get("/api/news", async (req, res) => {
   try {
-    const data = readNews();
+    const data = await readNews();
     res.json({
       success: true,
       count: data.news.length,
@@ -169,7 +122,7 @@ app.get("/api/news", (req, res) => {
   }
 });
 
-app.post("/api/news", requireAdmin, (req, res) => {
+app.post("/api/news", requireAdmin, async (req, res) => {
   try {
     const { title, description, image, registrationLink, enableRegistration } =
       req.body || {};
@@ -188,14 +141,14 @@ app.post("/api/news", requireAdmin, (req, res) => {
       });
     }
 
-    const data = readNews();
+    const data = await readNews();
     const newItem = {
       id: String(Date.now()),
       ...buildNewsFields(req.body),
     };
 
     data.news.unshift(newItem);
-    writeNews(data);
+    await writeNews(data);
 
     res.status(201).json({ success: true, news: newItem });
   } catch (err) {
@@ -203,7 +156,7 @@ app.post("/api/news", requireAdmin, (req, res) => {
   }
 });
 
-app.put("/api/news/:id", requireAdmin, (req, res) => {
+app.put("/api/news/:id", requireAdmin, async (req, res) => {
   try {
     const { title, description, image, registrationLink, enableRegistration } =
       req.body || {};
@@ -222,7 +175,7 @@ app.put("/api/news/:id", requireAdmin, (req, res) => {
       });
     }
 
-    const data = readNews();
+    const data = await readNews();
     const index = data.news.findIndex((item) => item.id === req.params.id);
 
     if (index === -1) {
@@ -235,7 +188,7 @@ app.put("/api/news/:id", requireAdmin, (req, res) => {
     };
 
     data.news[index] = updated;
-    writeNews(data);
+    await writeNews(data);
 
     res.json({ success: true, news: updated, message: "تم تحديث الخبر" });
   } catch (err) {
@@ -243,25 +196,28 @@ app.put("/api/news/:id", requireAdmin, (req, res) => {
   }
 });
 
-app.delete("/api/news/all", requireAdmin, (req, res) => {
+app.delete("/api/news/all", requireAdmin, async (req, res) => {
   try {
-    const data = readNews();
+    const data = await readNews();
     const count = data.news.length;
     data.news = [];
-    writeNews(data);
+    await writeNews(data);
     res.json({ success: true, message: "تم حذف جميع الأخبار", deleted: count });
   } catch (err) {
     res.status(500).json({ success: false, message: "تعذر حذف الأخبار" });
   }
 });
 
-app.delete("/api/news/:id", requireAdmin, (req, res) => {
+app.delete("/api/news/:id", requireAdmin, async (req, res) => {
   try {
     if (req.params.id === "all") {
-      return res.status(400).json({ success: false, message: "استخدم DELETE /api/news/all" });
+      return res.status(400).json({
+        success: false,
+        message: "استخدم DELETE /api/news/all",
+      });
     }
 
-    const data = readNews();
+    const data = await readNews();
     const before = data.news.length;
     data.news = data.news.filter((item) => item.id !== req.params.id);
 
@@ -269,7 +225,7 @@ app.delete("/api/news/:id", requireAdmin, (req, res) => {
       return res.status(404).json({ success: false, message: "الخبر غير موجود" });
     }
 
-    writeNews(data);
+    await writeNews(data);
     res.json({ success: true, message: "تم حذف الخبر" });
   } catch (err) {
     res.status(500).json({ success: false, message: "تعذر حذف الخبر" });
@@ -277,6 +233,9 @@ app.delete("/api/news/:id", requireAdmin, (req, res) => {
 });
 
 function getPublicUrl(port) {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
   if (process.env.KOYEB_PUBLIC_DOMAIN) {
     return `https://${process.env.KOYEB_PUBLIC_DOMAIN}`;
   }
@@ -330,8 +289,12 @@ function startServer(port, attempt = 0) {
   });
 }
 
-if (process.env.NODE_ENV === "production") {
-  startProduction();
-} else {
-  startServer(BASE_PORT);
+module.exports = app;
+
+if (!process.env.VERCEL) {
+  if (process.env.NODE_ENV === "production") {
+    startProduction();
+  } else {
+    startServer(BASE_PORT);
+  }
 }

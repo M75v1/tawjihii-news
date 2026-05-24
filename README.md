@@ -60,7 +60,17 @@ GET /api/news
 
 ## استضافة مجانية
 
-### Koyeb (موصى به)
+### Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/M75v1/tawjihii-news)
+
+**دليل Vercel بالعربية:** [DEPLOY-VERCEL.md](./DEPLOY-VERCEL.md)
+
+1. اضغط الزر → Import من GitHub.
+2. أضف `ADMIN_PASS` و `SESSION_SECRET`.
+3. أنشئ **Blob Store** لحفظ الأخبار بشكل دائم.
+
+### Koyeb
 
 [![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/M75v1/tawjihii-news&branch=main&name=tawjihii-news&ports=3000;http;/&env[NODE_ENV]=production&env[ADMIN_USER]=M75.zz)
 
